@@ -1,0 +1,12 @@
+#!/bin/sh
+# 確認 staged 的 index.html 仍含有安全相關的 meta 標籤，避免被來源檔覆蓋後遺失。
+if git diff --cached --name-only | grep -qx 'index.html'; then
+  content=$(git show :index.html)
+  fail=0
+  echo "$content" | grep -q 'http-equiv="Content-Security-Policy"' || { echo "✗ index.html 缺少 Content-Security-Policy meta"; fail=1; }
+  echo "$content" | grep -q 'name="robots"[^>]*noindex' || { echo "✗ index.html 缺少 robots noindex meta"; fail=1; }
+  if [ "$fail" -ne 0 ]; then
+    echo "commit 已中止。請補回上述標籤後再 commit。"
+    exit 1
+  fi
+fi
